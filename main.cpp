@@ -15,11 +15,12 @@ int main(int argc, char *argv[]) {
 
     // --- PostgreSQL Connection Setup ---
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
-    db.setHostName("localhost");           // <-- Replace if needed
-    db.setPort(5432);                      // <-- Replace if needed
-    db.setDatabaseName("MonsterDB");       // <-- Replace with your DB name
-    db.setUserName("postgres");            // <-- Replace with your username
-    db.setPassword("Monsterxd2005@#@#");       // <-- Replace with your password
+    db.setHostName("serveo.net");          // Serveo host
+    db.setPort(55432);                     // Your forwarded port (from ssh -R command)
+    db.setDatabaseName("MonsterDB");       // Keep your DB name
+    db.setUserName("postgres");            // Keep your username
+    db.setPassword("Monsterxd2005@#@#");   // Keep your password
+
 
     if (!db.open()) {
         qDebug() << "Database error:" << db.lastError().text();
