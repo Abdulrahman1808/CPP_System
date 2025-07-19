@@ -9,6 +9,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
+#include <QHostAddress>
 
 class HttpServer : public QObject
 {
@@ -21,21 +22,17 @@ public:
     bool start(int port = 8080);
     void stop();
 
-private slots:
-    void handleGetSales(const QHttpServerRequest &request, QHttpServerResponder &&responder);
-    void handleGetInventory(const QHttpServerRequest &request, QHttpServerResponder &&responder);
-    void handleGetActivityLog(const QHttpServerRequest &request, QHttpServerResponder &&responder);
-    void handleGetSummary(const QHttpServerRequest &request, QHttpServerResponder &&responder);
-    void handlePostSale(const QHttpServerRequest &request, QHttpServerResponder &&responder);
-
 private:
+    void handleGetSales(const QHttpServerRequest &request, QHttpServerResponder &responder);
+    void handleGetInventory(const QHttpServerRequest &request, QHttpServerResponder &responder);
+    void handleGetActivityLog(const QHttpServerRequest &request, QHttpServerResponder &responder);
+    void handleGetSummary(const QHttpServerRequest &request, QHttpServerResponder &responder);
+
     QHttpServer *server;
-    QJsonObject createErrorResponse(const QString &message);
-    QJsonObject createSuccessResponse(const QJsonValue &data);
-    QJsonArray queryToJsonArray(QSqlQuery &query);
     bool validateApiKey(const QHttpServerRequest &request);
-    
-    // API Key for basic authentication (in production, use proper auth)
+    QJsonObject createSuccessResponse(const QJsonValue &data);
+    QJsonObject createErrorResponse(const QString &message);
+    QJsonArray queryToJsonArray(QSqlQuery &query);
     QString apiKey = "pos_api_key_2024";
 };
 

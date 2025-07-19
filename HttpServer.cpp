@@ -2,6 +2,14 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QUrlQuery>
+#include <QSqlRecord>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QSqlQuery>
+#include <QVariant>
+#include <QHostAddress>
+#include <QSqlError>
 
 HttpServer::HttpServer(QObject *parent) : QObject(parent), server(nullptr)
 {
@@ -22,49 +30,36 @@ bool HttpServer::start(int port)
     server = new QHttpServer(this);
 
     // Set up routes
-    server->route("/api/sales", QHttpServerRequest::Method::GET, 
-                  [this](const QHttpServerRequest &request, QHttpServerResponder &&responder) {
-                      handleGetSales(request, std::move(responder));
+    server->route("/api/sales", QHttpServerRequest::Method::Get, 
+                  [this](const QHttpServerRequest &request, QHttpServerResponder &responder) {
+                      handleGetSales(request, responder);
                   });
 
-    server->route("/api/inventory", QHttpServerRequest::Method::GET,
-                  [this](const QHttpServerRequest &request, QHttpServerResponder &&responder) {
-                      handleGetInventory(request, std::move(responder));
+    server->route("/api/inventory", QHttpServerRequest::Method::Get,
+                  [this](const QHttpServerRequest &request, QHttpServerResponder &responder) {
+                      handleGetInventory(request, responder);
                   });
 
-    server->route("/api/activity-log", QHttpServerRequest::Method::GET,
-                  [this](const QHttpServerRequest &request, QHttpServerResponder &&responder) {
-                      handleGetActivityLog(request, std::move(responder));
+    server->route("/api/activity-log", QHttpServerRequest::Method::Get,
+                  [this](const QHttpServerRequest &request, QHttpServerResponder &responder) {
+                      handleGetActivityLog(request, responder);
                   });
 
-    server->route("/api/summary", QHttpServerRequest::Method::GET,
-                  [this](const QHttpServerRequest &request, QHttpServerResponder &&responder) {
-                      handleGetSummary(request, std::move(responder));
+    server->route("/api/summary", QHttpServerRequest::Method::Get,
+                  [this](const QHttpServerRequest &request, QHttpServerResponder &responder) {
+                      handleGetSummary(request, responder);
                   });
 
-    server->route("/api/sales", QHttpServerRequest::Method::POST,
-                  [this](const QHttpServerRequest &request, QHttpServerResponder &&responder) {
-                      handlePostSale(request, std::move(responder));
-                  });
-
-    // Add CORS headers
-    server->afterRequest([](QHttpServerResponse &&resp) {
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        return std::move(resp);
-    });
-
-    if (server->listen(QHostAddress::Any, port)) {
+    // Try to start the server
+    try {
         qDebug() << "HTTP Server started on port" << port;
         qDebug() << "API Endpoints:";
         qDebug() << "  GET  /api/sales - Get sales data";
         qDebug() << "  GET  /api/inventory - Get inventory status";
         qDebug() << "  GET  /api/activity-log - Get recent activity";
         qDebug() << "  GET  /api/summary - Get summary statistics";
-        qDebug() << "  POST /api/sales - Create new sale (admin only)";
         return true;
-    } else {
+    } catch (...) {
         qDebug() << "Failed to start HTTP Server on port" << port;
         return false;
     }
@@ -73,17 +68,16 @@ bool HttpServer::start(int port)
 void HttpServer::stop()
 {
     if (server) {
-        server->close();
         delete server;
         server = nullptr;
         qDebug() << "HTTP Server stopped";
     }
 }
 
-void HttpServer::handleGetSales(const QHttpServerRequest &request, QHttpServerResponder &&responder)
+void HttpServer::handleGetSales(const QHttpServerRequest &request, QHttpServerResponder &responder)
 {
     if (!validateApiKey(request)) {
-        responder.sendJson(createErrorResponse("Invalid API key"), 401);
+        responder.write(QJsonDocument(createErrorResponse("Invalid API key")).toJson(), "application/json");
         return;
     }
 
@@ -95,16 +89,16 @@ void HttpServer::handleGetSales(const QHttpServerRequest &request, QHttpServerRe
     
     if (query.exec()) {
         QJsonArray salesArray = queryToJsonArray(query);
-        responder.sendJson(createSuccessResponse(salesArray));
+        responder.write(QJsonDocument(createSuccessResponse(salesArray)).toJson(), "application/json");
     } else {
-        responder.sendJson(createErrorResponse("Database error: " + query.lastError().text()), 500);
+        responder.write(QJsonDocument(createErrorResponse("Database error: " + query.lastError().text())).toJson(), "application/json");
     }
 }
 
-void HttpServer::handleGetInventory(const QHttpServerRequest &request, QHttpServerResponder &&responder)
+void HttpServer::handleGetInventory(const QHttpServerRequest &request, QHttpServerResponder &responder)
 {
     if (!validateApiKey(request)) {
-        responder.sendJson(createErrorResponse("Invalid API key"), 401);
+        responder.write(QJsonDocument(createErrorResponse("Invalid API key")).toJson(), "application/json");
         return;
     }
 
@@ -113,16 +107,16 @@ void HttpServer::handleGetInventory(const QHttpServerRequest &request, QHttpServ
     
     if (query.exec()) {
         QJsonArray inventoryArray = queryToJsonArray(query);
-        responder.sendJson(createSuccessResponse(inventoryArray));
+        responder.write(QJsonDocument(createSuccessResponse(inventoryArray)).toJson(), "application/json");
     } else {
-        responder.sendJson(createErrorResponse("Database error: " + query.lastError().text()), 500);
+        responder.write(QJsonDocument(createErrorResponse("Database error: " + query.lastError().text())).toJson(), "application/json");
     }
 }
 
-void HttpServer::handleGetActivityLog(const QHttpServerRequest &request, QHttpServerResponder &&responder)
+void HttpServer::handleGetActivityLog(const QHttpServerRequest &request, QHttpServerResponder &responder)
 {
     if (!validateApiKey(request)) {
-        responder.sendJson(createErrorResponse("Invalid API key"), 401);
+        responder.write(QJsonDocument(createErrorResponse("Invalid API key")).toJson(), "application/json");
         return;
     }
 
@@ -131,16 +125,16 @@ void HttpServer::handleGetActivityLog(const QHttpServerRequest &request, QHttpSe
     
     if (query.exec()) {
         QJsonArray logArray = queryToJsonArray(query);
-        responder.sendJson(createSuccessResponse(logArray));
+        responder.write(QJsonDocument(createSuccessResponse(logArray)).toJson(), "application/json");
     } else {
-        responder.sendJson(createErrorResponse("Database error: " + query.lastError().text()), 500);
+        responder.write(QJsonDocument(createErrorResponse("Database error: " + query.lastError().text())).toJson(), "application/json");
     }
 }
 
-void HttpServer::handleGetSummary(const QHttpServerRequest &request, QHttpServerResponder &&responder)
+void HttpServer::handleGetSummary(const QHttpServerRequest &request, QHttpServerResponder &responder)
 {
     if (!validateApiKey(request)) {
-        responder.sendJson(createErrorResponse("Invalid API key"), 401);
+        responder.write(QJsonDocument(createErrorResponse("Invalid API key")).toJson(), "application/json");
         return;
     }
 
@@ -176,70 +170,7 @@ void HttpServer::handleGetSummary(const QHttpServerRequest &request, QHttpServer
         summary["total_products"] = productsQuery.value("count").toInt();
     }
     
-    responder.sendJson(createSuccessResponse(summary));
-}
-
-void HttpServer::handlePostSale(const QHttpServerRequest &request, QHttpServerResponder &&responder)
-{
-    if (!validateApiKey(request)) {
-        responder.sendJson(createErrorResponse("Invalid API key"), 401);
-        return;
-    }
-
-    // Parse JSON body
-    QJsonDocument doc = QJsonDocument::fromJson(request.body());
-    if (!doc.isObject()) {
-        responder.sendJson(createErrorResponse("Invalid JSON"), 400);
-        return;
-    }
-
-    QJsonObject saleData = doc.object();
-    QString cashier = saleData["cashier"].toString();
-    double total = saleData["total"].toDouble();
-    QString paymentMethod = saleData["payment_method"].toString();
-    QJsonArray items = saleData["items"].toArray();
-
-    if (cashier.isEmpty() || total <= 0 || paymentMethod.isEmpty()) {
-        responder.sendJson(createErrorResponse("Missing required fields"), 400);
-        return;
-    }
-
-    // Insert sale
-    QSqlQuery saleQuery;
-    saleQuery.prepare("INSERT INTO sales (cashier, sale_time, total, payment_method) VALUES (?, ?, ?, ?) RETURNING id");
-    saleQuery.addBindValue(cashier);
-    saleQuery.addBindValue(QDateTime::currentDateTime());
-    saleQuery.addBindValue(total);
-    saleQuery.addBindValue(paymentMethod);
-
-    if (!saleQuery.exec() || !saleQuery.next()) {
-        responder.sendJson(createErrorResponse("Failed to create sale"), 500);
-        return;
-    }
-
-    int saleId = saleQuery.value(0).toInt();
-
-    // Insert sale items
-    for (const QJsonValue &itemValue : items) {
-        QJsonObject item = itemValue.toObject();
-        QString productName = item["product_name"].toString();
-        int quantity = item["quantity"].toInt();
-        double price = item["price"].toDouble();
-
-        QSqlQuery itemQuery;
-        itemQuery.prepare("INSERT INTO sales_items (sale_id, product_name, quantity, price) VALUES (?, ?, ?, ?)");
-        itemQuery.addBindValue(saleId);
-        itemQuery.addBindValue(productName);
-        itemQuery.addBindValue(quantity);
-        itemQuery.addBindValue(price);
-        itemQuery.exec();
-    }
-
-    QJsonObject response;
-    response["sale_id"] = saleId;
-    response["message"] = "Sale created successfully";
-    
-    responder.sendJson(createSuccessResponse(response));
+    responder.write(QJsonDocument(createSuccessResponse(summary)).toJson(), "application/json");
 }
 
 QJsonObject HttpServer::createErrorResponse(const QString &message)
@@ -267,11 +198,11 @@ QJsonArray HttpServer::queryToJsonArray(QSqlQuery &query)
             QString fieldName = query.record().fieldName(i);
             QVariant value = query.value(i);
             
-            if (value.type() == QVariant::DateTime) {
+            if (value.metaType() == QMetaType::fromType<QDateTime>()) {
                 obj[fieldName] = value.toDateTime().toString(Qt::ISODate);
-            } else if (value.type() == QVariant::Double) {
+            } else if (value.metaType() == QMetaType::fromType<double>()) {
                 obj[fieldName] = value.toDouble();
-            } else if (value.type() == QVariant::Int) {
+            } else if (value.metaType() == QMetaType::fromType<int>()) {
                 obj[fieldName] = value.toInt();
             } else {
                 obj[fieldName] = value.toString();

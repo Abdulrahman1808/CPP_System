@@ -16,12 +16,12 @@ int main(int argc, char *argv[]) {
 
     // --- PostgreSQL Connection Setup ---
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
-    db.setHostName("ep-proud-morning-a2qt65e9-pooler.eu-central-1.aws.neon.tech");
+    db.setHostName("localhost");
     db.setPort(5432); // Default PostgreSQL port
-    db.setDatabaseName("neondb");
-    db.setUserName("neondb_owner");
-    db.setPassword("npg_nvHxBN9Pb5ID");
-    db.setConnectOptions("sslmode=require"); // Enable SSL for Neon
+    db.setDatabaseName("MonsterDB");
+    db.setUserName("postgres");
+    db.setPassword("Monsterxd2005@#@#");
+    // db.setConnectOptions("sslmode=require"); // Commented out for local connection
 
     if (!db.open()) {
         qDebug() << "Database error:" << db.lastError().text();
@@ -35,10 +35,10 @@ int main(int argc, char *argv[]) {
     if (httpServer.start(8080)) {
         qDebug() << "HTTP API Server started on port 8080";
         qDebug() << "Your coworkers can now access:";
-        qDebug() << "  http://YOUR_IP:8080/api/sales";
-        qDebug() << "  http://YOUR_IP:8080/api/inventory";
-        qDebug() << "  http://YOUR_IP:8080/api/activity-log";
-        qDebug() << "  http://YOUR_IP:8080/api/summary";
+        qDebug() << "  http://192.168.1.36:8080/api/sales";
+        qDebug() << "  http://192.168.1.36:8080/api/inventory";
+        qDebug() << "  http://192.168.1.36:8080/api/activity-log";
+        qDebug() << "  http://192.168.1.36:8080/api/summary";
         qDebug() << "API Key: pos_api_key_2024";
     } else {
         qDebug() << "Warning: Failed to start HTTP server";

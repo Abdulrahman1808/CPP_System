@@ -1,25 +1,22 @@
 #include "SalesScreen.h"
+#include "BillDialog.h"
+#include "Bill.h"
+#include "ReportsScreen.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QListWidget>
-#include <QLineEdit>
 #include <QTableWidget>
-#include <QSpinBox>
-#include <QComboBox>
+#include <QTableWidgetItem>
 #include <QHeaderView>
+#include <QComboBox>
 #include <QMessageBox>
-#include <QFont>
-#include <QFrame>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
 #include <QDebug>
 #include <QDateTime>
-#include "Bill.h"
-#include "BillDialog.h"
 
 SalesScreen::SalesScreen(QWidget *parent) : QWidget(parent), subtotal(0), tax(0), finalTotal(0) {
     QHBoxLayout *mainLayout = new QHBoxLayout(this);

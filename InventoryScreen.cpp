@@ -1,4 +1,5 @@
 #include "InventoryScreen.h"
+#include "ReportsScreen.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
