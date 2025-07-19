@@ -9,24 +9,39 @@
 #include <QCryptographicHash>
 #include <QMessageBox>
 #include "ReportsScreen.h"
+#include "HttpServer.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     // --- PostgreSQL Connection Setup ---
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
-    db.setHostName("serveo.net");          // Serveo host
-    db.setPort(55432);                     // Your forwarded port (from ssh -R command)
-    db.setDatabaseName("MonsterDB");       // Keep your DB name
-    db.setUserName("postgres");            // Keep your username
-    db.setPassword("Monsterxd2005@#@#");   // Keep your password
-
+    db.setHostName("ep-proud-morning-a2qt65e9-pooler.eu-central-1.aws.neon.tech");
+    db.setPort(5432); // Default PostgreSQL port
+    db.setDatabaseName("neondb");
+    db.setUserName("neondb_owner");
+    db.setPassword("npg_nvHxBN9Pb5ID");
+    db.setConnectOptions("sslmode=require"); // Enable SSL for Neon
 
     if (!db.open()) {
         qDebug() << "Database error:" << db.lastError().text();
         return -1; // Exit if DB connection fails
     } else {
         qDebug() << "Connected to PostgreSQL!";
+    }
+
+    // --- Start HTTP Server ---
+    HttpServer httpServer;
+    if (httpServer.start(8080)) {
+        qDebug() << "HTTP API Server started on port 8080";
+        qDebug() << "Your coworkers can now access:";
+        qDebug() << "  http://YOUR_IP:8080/api/sales";
+        qDebug() << "  http://YOUR_IP:8080/api/inventory";
+        qDebug() << "  http://YOUR_IP:8080/api/activity-log";
+        qDebug() << "  http://YOUR_IP:8080/api/summary";
+        qDebug() << "API Key: pos_api_key_2024";
+    } else {
+        qDebug() << "Warning: Failed to start HTTP server";
     }
 
     // --- User Login ---
